@@ -148,49 +148,7 @@ body {
   color: #FFB6C1;
 }
 
-.sidebar-quick-actions {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
 
-.sidebar-quick-actions h3 {
-  color: #B5E2FA;
-  font-size: 1.1rem;
-  margin: 0 0 16px 0;
-  font-weight: 600;
-  text-align: center;
-}
-
-.quick-action-btn {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(247, 160, 114, 0.9);
-  color: #232946;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.quick-action-btn:hover {
-  background: #F7A072;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(247, 160, 114, 0.4);
-}
-
-.quick-action-btn:last-child {
-  margin-bottom: 0;
-}
 
 /* Enhanced main content */
 .main-content {
