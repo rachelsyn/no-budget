@@ -61,6 +61,37 @@ app.get('/api/expenses', (req, res) => {
   res.json(expenses);
 });
 
+// Update expense by ID
+app.put('/api/expenses/:id', (req, res) => {
+  const { id } = req.params;
+  const { amount, category, date, description, tags } = req.body;
+  
+  if (!amount) {
+    return res.status(400).json({ error: 'Amount is required.' });
+  }
+  
+  const expenses = readExpenses();
+  const expenseIndex = expenses.findIndex(exp => exp.id === id);
+  
+  if (expenseIndex === -1) {
+    return res.status(404).json({ error: 'Expense not found.' });
+  }
+  
+  // Update the expense while preserving existing fields if not provided
+  const updatedExpense = {
+    ...expenses[expenseIndex],
+    ...(amount !== undefined && { amount }),
+    ...(category !== undefined && { category }),
+    ...(date !== undefined && { date }),
+    ...(description !== undefined && { description }),
+    ...(tags !== undefined && { tags })
+  };
+  
+  expenses[expenseIndex] = updatedExpense;
+  writeExpenses(expenses);
+  res.json(updatedExpense);
+});
+
 const INCOME_FILE = path.join(__dirname, 'income.json');
 
 // Helper to read income
@@ -107,6 +138,36 @@ app.post('/api/income', (req, res) => {
 app.get('/api/income', (req, res) => {
   const income = readIncome();
   res.json(income);
+});
+
+// Update income by ID
+app.put('/api/income/:id', (req, res) => {
+  const { id } = req.params;
+  const { amount, source, date, description } = req.body;
+  
+  if (!amount) {
+    return res.status(400).json({ error: 'Amount is required.' });
+  }
+  
+  const income = readIncome();
+  const incomeIndex = income.findIndex(inc => inc.id === id);
+  
+  if (incomeIndex === -1) {
+    return res.status(404).json({ error: 'Income not found.' });
+  }
+  
+  // Update the income while preserving existing fields if not provided
+  const updatedIncome = {
+    ...income[incomeIndex],
+    ...(amount !== undefined && { amount }),
+    ...(source !== undefined && { source }),
+    ...(date !== undefined && { date }),
+    ...(description !== undefined && { description })
+  };
+  
+  income[incomeIndex] = updatedIncome;
+  writeIncome(income);
+  res.json(updatedIncome);
 });
 
 const CATEGORIES_FILE = path.join(__dirname, 'categories.json');

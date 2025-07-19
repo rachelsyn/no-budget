@@ -4,13 +4,14 @@ A simple and intuitive budget tracking application to manage your expenses and i
 
 ## ✨ Features
 
-- 📊 Track expenses with categories, dates, and tags
-- 💰 Record income from various sources  
-- 📈 View financial trends with interactive charts
-- 📅 Calendar view of transactions
-- 🎯 Quick actions for common tasks
-- 💱 Multi-currency support (default: HKD)
-- 📱 Clean, responsive web interface
+- 📊 **Expense Tracking**: Categorize expenses with dates, descriptions, and custom tags
+- 💰 **Income Management**: Record income from various sources with detailed categorization
+- 📈 **Interactive Charts**: View financial trends with beautiful, responsive visualizations
+- 📅 **Calendar View**: See your transactions organized by date
+- 🎯 **Quick Actions**: Streamlined interface for common tasks (recently improved!)
+- 💱 **Multi-currency Support**: Default HKD with easy currency customization
+- 📱 **Responsive Design**: Clean, modern interface that works on all devices
+- 🔄 **Recently Updated**: Enhanced code maintainability and improved user experience
 
 ## 🚀 Quick Start (Recommended)
 
@@ -74,11 +75,14 @@ no-budget/
 ├── client/                # React frontend application
 │   ├── src/
 │   │   ├── App.js         # Main application component
-│   │   ├── App.css        # Styles
+│   │   ├── App.css        # Styles and responsive design
 │   │   └── setupProxy.js  # Development proxy config
 │   └── build/             # Production build (created by setup)
-├── *.json                 # Data storage files
-└── package.json           # Dependencies and scripts
+├── expenses.json          # Expense data storage
+├── income.json           # Income data storage
+├── categories.json       # Custom expense categories
+├── income_categories.json # Custom income sources
+└── package.json          # Dependencies and scripts
 ```
 
 ## 💾 Data Storage
@@ -89,7 +93,7 @@ Your financial data is stored locally in JSON files:
 - `categories.json` - Custom expense categories
 - `income_categories.json` - Custom income sources
 
-**Backup tip:** Copy these files to backup your data before updates.
+**💡 Backup tip:** Copy these files to backup your data before updates.
 
 ## 🔧 Manual Setup (If Quick Setup Fails)
 
@@ -170,7 +174,7 @@ npm --version
 
 # Check if ports are free
 lsof -ti:5001  # Should be empty
-lsof -ti:3000  # Should be empty
+lsof -ti:3000  # Should be empty (dev mode only)
 ```
 
 ## 🧪 Testing Your Setup
@@ -178,8 +182,8 @@ lsof -ti:3000  # Should be empty
 The `npm run validate` command automatically tests:
 - ✅ All required files exist
 - ✅ Server starts successfully  
-- ✅ All API endpoints respond
-- ✅ Frontend build is ready
+- ✅ All API endpoints respond correctly
+- ✅ Frontend build is ready to serve
 
 If validation passes, your app is guaranteed to work!
 
@@ -196,13 +200,13 @@ npm run validate   # Make sure everything works
 ## 🚢 Deployment
 
 The app is deployment-ready for platforms like:
-- Railway (configuration included)
-- Heroku
-- Vercel  
-- Netlify
-- Any Node.js hosting service
+- **Railway** (configuration included - `railway.json`)
+- **Heroku** 
+- **Vercel**  
+- **Netlify**
+- **Any Node.js hosting service**
 
-The built React app is served by the Express server for simplified deployment.
+The built React app is served by the Express server for simplified deployment. **No separate frontend deployment needed!**
 
 ## 📋 Available Scripts
 
@@ -216,17 +220,33 @@ The built React app is served by the Express server for simplified deployment.
 
 ## 🤝 Contributing
 
+We welcome contributions! This project is actively maintained and recently refactored for better code quality.
+
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run `npm run validate` to ensure everything works
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+3. Make your changes following the existing code style
+4. Run `npm run validate` to ensure everything works
+5. Commit your changes (`git commit -m 'Add some amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+**Recent improvements include:**
+- 🔧 Code refactoring for better maintainability
+- 🎯 Enhanced quick actions functionality
+- 🐛 Bug fixes for UI components
+- 📱 Improved responsive design
 
 ## 📄 License
 
 This project is licensed under the ISC License.
 
+## 🆕 What's New
+
+- **Enhanced Code Quality**: Recent major refactoring reduces redundancy and improves maintainability
+- **Improved Quick Actions**: Fixed interference issues and better button handling
+- **Better Navigation**: Enhanced View Trends functionality and sidebar improvements
+- **Cleaner UI**: Removed unused styles and improved overall design consistency
+
 ---
 
-**Need help?** Check the troubleshooting section above or create an issue on GitHub. 
+**Need help?** Check the troubleshooting section above or create an issue on GitHub. This project is actively maintained and we respond quickly to issues! 🚀 

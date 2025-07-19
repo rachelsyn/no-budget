@@ -5,5 +5,12 @@
     "source": "Salary",
     "date": "2025-07-19",
     "description": ""
+  },
+  {
+    "id": "1752938815347",
+    "amount": "5000",
+    "source": "Freelance",
+    "date": "2025-07-19",
+    "description": ""
   }
 ]

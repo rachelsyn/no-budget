@@ -36,5 +36,23 @@
     "tags": [
       "Netflix"
     ]
+  },
+  {
+    "id": "1752938806733",
+    "amount": "100",
+    "category": "Transport",
+    "date": "2025-07-19",
+    "description": "",
+    "tags": []
+  },
+  {
+    "id": "1752944705974",
+    "amount": "15",
+    "category": "Food",
+    "date": "2025-07-20",
+    "description": "",
+    "tags": [
+      "sugars"
+    ]
   }
 ]
