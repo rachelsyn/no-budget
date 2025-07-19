@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { NavLink, Routes, Route, useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -17,49 +17,158 @@ import {
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
+// Utility functions
+const getLocalDateString = () => {
+  const today = new Date();
+  return today.getFullYear() + '-' + 
+    String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(today.getDate()).padStart(2, '0');
+};
+
+const formatCurrency = (amount) => `HK$${Number(amount).toFixed(2)}`;
+
+const calculateTotals = (items, groupBy, amountKey = 'amount') => {
+  return items.reduce((acc, item) => {
+    const key = item[groupBy];
+    acc[key] = (acc[key] || 0) + Number(item[amountKey]);
+    return acc;
+  }, {});
+};
+
+// Constants
+const FORM_INPUT_STYLE = { 
+  marginBottom: 6, 
+  width: '100%', 
+  borderRadius: 6, 
+  border: '1px solid #ccc', 
+  padding: 6 
+};
+
+const BUTTON_STYLE = {
+  primary: { background: '#36A2EB', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px' },
+  secondary: { background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '4px 12px' },
+  expense: { fontSize: 14, padding: '4px 12px', borderRadius: 8, border: 'none', background: '#0FA3B1', color: '#fff', cursor: 'pointer', marginBottom: 4 },
+  income: { fontSize: 14, padding: '4px 12px', borderRadius: 8, border: 'none', background: '#F7A072', color: '#fff', cursor: 'pointer', marginBottom: 4 }
+};
+
+// Icon mappings
+const CATEGORY_ICONS = {
+  'Food': '🍔',
+  'Meals': '🍽️',
+  'Transport': '🚗',
+  'Transportation': '🚌',
+  'Shopping': '🛍️',
+  'Bills': '💡',
+  'Entertainment': '🎬',
+  'Other': '📦',
+};
+
+const getIcon = (name, type = 'expense') => {
+  if (type === 'expense') {
+    return CATEGORY_ICONS[name] || '💸';
+  }
+  // Income icon logic
+  if (/salary/i.test(name)) return '💼';
+  if (/freelance/i.test(name)) return '🧑‍💻';
+  if (/bonus/i.test(name)) return '🎁';
+  return '💰';
+};
+
+// Reusable Form Component
+function TransactionForm({ isOpen, type, category, form, onFormChange, onSubmit, onClose }) {
+  if (!isOpen) return null;
+  
+  const isExpense = type === 'expense';
+  
+  return (
+    <div style={{ marginTop: 10, width: '100%' }}>
+      <input
+        type="number"
+        placeholder="Amount"
+        value={form.amount}
+        onChange={e => onFormChange('amount', e.target.value)}
+        style={FORM_INPUT_STYLE}
+      />
+      {isExpense && (
+        <input
+          type="text"
+          placeholder="Tag (e.g. breakfast)"
+          value={form.tag}
+          onChange={e => onFormChange('tag', e.target.value)}
+          style={FORM_INPUT_STYLE}
+        />
+      )}
+      <div>
+        <button onClick={onSubmit} style={{ ...BUTTON_STYLE.primary, marginRight: 8 }}>Add</button>
+        <button onClick={onClose} style={BUTTON_STYLE.secondary}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+// Reusable Card Component
+function TransactionCard({ category, total, icon, color, type, form, onOpenForm, onFormChange, onSubmit, onCloseForm }) {
+  const cardClass = type === 'expense' ? 'card-expense' : 'card-income';
+  const buttonStyle = type === 'expense' ? BUTTON_STYLE.expense : BUTTON_STYLE.income;
+  
+  return (
+    <div className={cardClass}>
+      <div style={{ fontSize: 36, marginBottom: 8 }}>{icon}</div>
+      <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>{category}</div>
+      <div style={{ fontSize: 22, color, fontWeight: 700, marginBottom: 8 }}>
+        {formatCurrency(total || 0)}
+      </div>
+      <button onClick={() => onOpenForm(category)} style={buttonStyle}>Add</button>
+      <TransactionForm
+        isOpen={form?.open || false}
+        type={type}
+        category={category}
+        form={form || { amount: '', tag: '' }}
+        onFormChange={(field, value) => onFormChange(category, field, value)}
+        onSubmit={() => onSubmit(category)}
+        onClose={() => onCloseForm(category)}
+      />
+    </div>
+  );
+}
+
 function HomePage(props) {
-  // All the dashboard logic and UI from the previous App return (except calendar)
-  const { categories, expenseTotals, openExpenseForm, expenseForm, setExpenseForm, handleAddExpense, closeExpenseForm, getCategoryIcon, incomeTotals, incomeCategories, openIncomeForm, incomeForm, setIncomeForm, handleAddIncome, closeIncomeForm, getSourceIcon, handleAddIncomeCategory } = props;
+  const { 
+    categories, expenseTotals, expenseForm, 
+    incomeCategories, incomeTotals, incomeForm,
+    onExpenseFormChange, onIncomeFormChange,
+    onOpenExpenseForm, onCloseExpenseForm,
+    onOpenIncomeForm, onCloseIncomeForm,
+    onAddExpense, onAddIncome, onAddIncomeCategory
+  } = props;
+  
   const [newIncomeCategory, setNewIncomeCategory] = useState('');
+  
   return (
     <>
-      {/* Expenses Row */}
+      {/* Expenses Section */}
       <div style={{ marginBottom: 40 }}>
         <h2>Expenses</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
           {categories.slice(0, 9).map(cat => (
-            <div key={cat} className="card-expense">
-              <div style={{ fontSize: 36, marginBottom: 8 }}>{getCategoryIcon(cat)}</div>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>{cat}</div>
-              <div style={{ fontSize: 22, color: '#0FA3B1', fontWeight: 700, marginBottom: 8 }}>HK${expenseTotals[cat]?.toFixed(2) || '0.00'}</div>
-              <button onClick={() => openExpenseForm(cat)} style={{ fontSize: 14, padding: '4px 12px', borderRadius: 8, border: 'none', background: '#0FA3B1', color: '#fff', cursor: 'pointer', marginBottom: 4 }}>Add</button>
-              {expenseForm[cat]?.open && (
-                <div style={{ marginTop: 10, width: '100%' }}>
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    value={expenseForm[cat].amount}
-                    onChange={e => setExpenseForm(f => ({ ...f, [cat]: { ...f[cat], amount: e.target.value } }))}
-                    style={{ marginBottom: 6, width: '100%', borderRadius: 6, border: '1px solid #ccc', padding: 6 }}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Tag (e.g. breakfast)"
-                    value={expenseForm[cat].tag}
-                    onChange={e => setExpenseForm(f => ({ ...f, [cat]: { ...f[cat], tag: e.target.value } }))}
-                    style={{ marginBottom: 6, width: '100%', borderRadius: 6, border: '1px solid #ccc', padding: 6 }}
-                  />
-                  <div>
-                    <button onClick={() => handleAddExpense(cat)} style={{ marginRight: 8, background: '#36A2EB', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px' }}>Add</button>
-                    <button onClick={() => closeExpenseForm(cat)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '4px 12px' }}>Cancel</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <TransactionCard
+              key={cat}
+              category={cat}
+              total={expenseTotals[cat]}
+              icon={getIcon(cat, 'expense')}
+              color="#0FA3B1"
+              type="expense"
+              form={expenseForm[cat]}
+              onOpenForm={onOpenExpenseForm}
+              onFormChange={onExpenseFormChange}
+              onSubmit={onAddExpense}
+              onCloseForm={onCloseExpenseForm}
+            />
           ))}
         </div>
       </div>
-      {/* Income Row */}
+
+      {/* Income Section */}
       <div style={{ marginBottom: 40 }}>
         <h2>Income</h2>
         <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
@@ -73,7 +182,7 @@ function HomePage(props) {
           <button
             onClick={() => {
               if (newIncomeCategory.trim()) {
-                handleAddIncomeCategory(newIncomeCategory.trim());
+                onAddIncomeCategory(newIncomeCategory.trim());
                 setNewIncomeCategory('');
               }
             }}
@@ -83,31 +192,23 @@ function HomePage(props) {
           </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
-          {incomeCategories.slice(0, 9).length === 0 && (
+          {incomeCategories.length === 0 && (
             <div style={{ color: '#888' }}>No income categories yet</div>
           )}
           {incomeCategories.slice(0, 9).map(src => (
-            <div key={src} className="card-income">
-              <div style={{ fontSize: 36, marginBottom: 8 }}>{getSourceIcon(src)}</div>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 6 }}>{src}</div>
-              <div style={{ fontSize: 22, color: '#F7A072', fontWeight: 700, marginBottom: 8 }}>HK${incomeTotals[src]?.toFixed(2) || '0.00'}</div>
-              <button onClick={() => openIncomeForm(src)} style={{ fontSize: 14, padding: '4px 12px', borderRadius: 8, border: 'none', background: '#F7A072', color: '#fff', cursor: 'pointer', marginBottom: 4 }}>Add</button>
-              {incomeForm[src]?.open && (
-                <div style={{ marginTop: 10, width: '100%' }}>
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    value={incomeForm[src].amount}
-                    onChange={e => setIncomeForm(f => ({ ...f, [src]: { ...f[src], amount: e.target.value } }))}
-                    style={{ marginBottom: 6, width: '100%', borderRadius: 6, border: '1px solid #ccc', padding: 6 }}
-                  />
-                  <div>
-                    <button onClick={() => handleAddIncome(src)} style={{ marginRight: 8, background: '#0FA3B1', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px' }}>Add</button>
-                    <button onClick={() => closeIncomeForm(src)} style={{ background: '#eee', color: '#333', border: 'none', borderRadius: 6, padding: '4px 12px' }}>Cancel</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <TransactionCard
+              key={src}
+              category={src}
+              total={incomeTotals[src]}
+              icon={getIcon(src, 'income')}
+              color="#F7A072"
+              type="income"
+              form={incomeForm[src]}
+              onOpenForm={onOpenIncomeForm}
+              onFormChange={onIncomeFormChange}
+              onSubmit={onAddIncome}
+              onCloseForm={onCloseIncomeForm}
+            />
           ))}
         </div>
       </div>
@@ -116,18 +217,40 @@ function HomePage(props) {
 }
 
 function TransactionsPage(props) {
-  // Calendar and daily details logic from previous App (with expenses/income for selected date)
   const { expenses, income } = props;
   const [selectedDate, setSelectedDate] = useState(null);
   
-  // Fix timezone issue by using local date instead of UTC
-  const selectedDateStr = selectedDate ? 
-    selectedDate.getFullYear() + '-' + 
-    String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
-    String(selectedDate.getDate()).padStart(2, '0') : null;
+  const selectedDateStr = useMemo(() => {
+    if (!selectedDate) return null;
+    return selectedDate.getFullYear() + '-' + 
+      String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(selectedDate.getDate()).padStart(2, '0');
+  }, [selectedDate]);
     
-  const expensesForDate = selectedDateStr ? expenses.filter(e => e.date === selectedDateStr) : [];
-  const incomeForDate = selectedDateStr ? income.filter(i => i.date === selectedDateStr) : [];
+  const transactionsForDate = useMemo(() => {
+    if (!selectedDateStr) return { expenses: [], income: [] };
+    return {
+      expenses: expenses.filter(e => e.date === selectedDateStr),
+      income: income.filter(i => i.date === selectedDateStr)
+    };
+  }, [expenses, income, selectedDateStr]);
+
+  const renderTransactionList = (items, type) => (
+    items.length === 0 ? (
+      <p>None</p>
+    ) : (
+      <ul>
+        {items.map(item => (
+          <li key={item.id}>
+            {type === 'expense' ? item.category : item.source}: {formatCurrency(item.amount)}
+            {type === 'expense' && item.tags && item.tags.length > 0 && ` [${item.tags.join(', ')}]`}
+            {item.description && ` - ${item.description}`}
+          </li>
+        ))}
+      </ul>
+    )
+  );
+
   return (
     <div>
       <h2>Transactions Calendar</h2>
@@ -137,27 +260,11 @@ function TransactionsPage(props) {
           <h3>Details for {selectedDateStr}</h3>
           <div>
             <strong>Expenses:</strong>
-            {expensesForDate.length === 0 ? (
-              <p>None</p>
-            ) : (
-              <ul>
-                {expensesForDate.map(e => (
-                  <li key={e.id}>{e.category}: HK${e.amount} {e.tags && e.tags.length > 0 && `[${e.tags.join(', ')}]`} {e.description && `- ${e.description}`}</li>
-                ))}
-              </ul>
-            )}
+            {renderTransactionList(transactionsForDate.expenses, 'expense')}
           </div>
           <div>
             <strong>Income:</strong>
-            {incomeForDate.length === 0 ? (
-              <p>None</p>
-            ) : (
-              <ul>
-                {incomeForDate.map(i => (
-                  <li key={i.id}>{i.source}: HK${i.amount} {i.description && `- ${i.description}`}</li>
-                ))}
-              </ul>
-            )}
+            {renderTransactionList(transactionsForDate.income, 'income')}
           </div>
         </div>
       )}
@@ -168,53 +275,57 @@ function TransactionsPage(props) {
 function AnalysisPage(props) {
   const { expenses, income } = props;
   
-  // Pie chart: Expenses by category
-  const categoryTotals = expenses.reduce((acc, exp) => {
-    acc[exp.category] = (acc[exp.category] || 0) + Number(exp.amount);
-    return acc;
-  }, {});
+  const categoryTotals = useMemo(() => 
+    calculateTotals(expenses, 'category'), [expenses]
+  );
   
-  const pieData = {
-    labels: Object.keys(categoryTotals),
-    datasets: [
-      {
-        data: Object.values(categoryTotals),
-        backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
-          '#FF9F40', '#4BC0C0', '#9966FF'
+  const chartData = useMemo(() => {
+    const allDates = Array.from(new Set([
+      ...expenses.map(e => e.date),
+      ...income.map(i => i.date)
+    ])).sort();
+    
+    return {
+      pie: {
+        labels: Object.keys(categoryTotals),
+        datasets: [
+          {
+            data: Object.values(categoryTotals),
+            backgroundColor: [
+              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+              '#FF9F40', '#4BC0C0', '#9966FF'
+            ]
+          }
         ]
-      }
-    ]
-  };
-  
-  // Bar chart: Income vs Expenses by date
-  const allDates = Array.from(new Set([
-    ...expenses.map(e => e.date),
-    ...income.map(i => i.date)
-  ])).sort();
-  
-  const expenseByDate = allDates.map(date =>
-    expenses.filter(e => e.date === date).reduce((sum, e) => sum + Number(e.amount), 0)
-  );
-  const incomeByDate = allDates.map(date =>
-    income.filter(i => i.date === date).reduce((sum, i) => sum + Number(i.amount), 0)
-  );
-  
-  const barData = {
-    labels: allDates,
-    datasets: [
-      {
-        label: 'Expenses',
-        data: expenseByDate,
-        backgroundColor: '#FF6384'
       },
-      {
-        label: 'Income',
-        data: incomeByDate,
-        backgroundColor: '#36A2EB'
-      }
-    ]
-  };
+      bar: {
+        labels: allDates,
+        datasets: [
+          {
+            label: 'Expenses',
+            data: allDates.map(date =>
+              expenses.filter(e => e.date === date).reduce((sum, e) => sum + Number(e.amount), 0)
+            ),
+            backgroundColor: '#FF6384'
+          },
+          {
+            label: 'Income',
+            data: allDates.map(date =>
+              income.filter(i => i.date === date).reduce((sum, i) => sum + Number(i.amount), 0)
+            ),
+            backgroundColor: '#36A2EB'
+          }
+        ]
+      },
+      hasData: Object.keys(categoryTotals).length > 0 || allDates.length > 0
+    };
+  }, [expenses, income, categoryTotals]);
+
+  const renderNoDataMessage = (message) => (
+    <p style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
+      {message}
+    </p>
+  );
 
   return (
     <div>
@@ -222,24 +333,20 @@ function AnalysisPage(props) {
       <div style={{ marginBottom: 40 }}>
         <h3>Expenses by Category</h3>
         {Object.keys(categoryTotals).length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
-            No expense data to display. Add some expenses to see the breakdown.
-          </p>
+          renderNoDataMessage('No expense data to display. Add some expenses to see the breakdown.')
         ) : (
           <div style={{ maxWidth: 400, margin: '0 auto' }}>
-            <Pie data={pieData} />
+            <Pie data={chartData.pie} />
           </div>
         )}
       </div>
       <div>
         <h3>Income vs Expenses Over Time</h3>
-        {allDates.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
-            No transaction data to display. Add some income or expenses to see trends.
-          </p>
+        {chartData.bar.labels.length === 0 ? (
+          renderNoDataMessage('No transaction data to display. Add some income or expenses to see trends.')
         ) : (
           <div style={{ maxWidth: 600, margin: '0 auto' }}>
-            <Bar data={barData} />
+            <Bar data={chartData.bar} />
           </div>
         )}
       </div>
@@ -252,11 +359,27 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [income, setIncome] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [incomeCategories, setIncomeCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expenseForm, setExpenseForm] = useState({}); // { [category]: { open: bool, amount: '', tag: '' } }
-  const [incomeForm, setIncomeForm] = useState({}); // { [source]: { open: bool, amount: '' } }
-  const [incomeCategories, setIncomeCategories] = useState([]);
+  const [expenseForm, setExpenseForm] = useState({});
+  const [incomeForm, setIncomeForm] = useState({});
+
+  // Memoized calculations to avoid repeated computations
+  const totals = useMemo(() => {
+    const expenseTotals = calculateTotals(expenses, 'category');
+    const incomeTotals = calculateTotals(income, 'source');
+    const totalIncome = Object.values(incomeTotals).reduce((sum, val) => sum + val, 0);
+    const totalExpenses = Object.values(expenseTotals).reduce((sum, val) => sum + val, 0);
+    
+    return {
+      expenseTotals,
+      incomeTotals,
+      totalIncome,
+      totalExpenses,
+      balance: totalIncome - totalExpenses
+    };
+  }, [expenses, income]);
 
   useEffect(() => {
     async function fetchData() {
@@ -267,10 +390,12 @@ function App() {
           fetch('http://localhost:5001/api/categories'),
           fetch('http://localhost:5001/api/income-categories')
         ]);
-        const expData = await expRes.json();
-        const incData = await incRes.json();
-        const catData = await catRes.json();
-        const incCatData = await incCatRes.json();
+        const [expData, incData, catData, incCatData] = await Promise.all([
+          expRes.json(),
+          incRes.json(),
+          catRes.json(),
+          incCatRes.json()
+        ]);
         setExpenses(expData);
         setIncome(incData);
         setCategories(catData);
@@ -284,116 +409,80 @@ function App() {
     fetchData();
   }, []);
 
-  // Expense totals by category
-  const expenseTotals = categories.reduce((acc, cat) => {
-    acc[cat] = expenses.filter(e => e.category === cat).reduce((sum, e) => sum + Number(e.amount), 0);
-    return acc;
-  }, {});
+  // Generic form handlers
+  const createFormHandler = (setFormState) => ({
+    open: (key) => setFormState(f => ({ ...f, [key]: { open: true, amount: '', tag: '' } })),
+    close: (key) => setFormState(f => ({ ...f, [key]: { open: false, amount: '', tag: '' } })),
+    change: (key, field, value) => setFormState(f => ({ ...f, [key]: { ...f[key], [field]: value } }))
+  });
 
-  // Income totals by source
-  const sources = Array.from(new Set(income.map(i => i.source)));
-  const incomeTotals = sources.reduce((acc, src) => {
-    acc[src] = income.filter(i => i.source === src).reduce((sum, i) => sum + Number(i.amount), 0);
-    return acc;
-  }, {});
+  const expenseFormHandler = createFormHandler(setExpenseForm);
+  const incomeFormHandler = createFormHandler(setIncomeForm);
 
-  // Handle expense form open/close
-  const openExpenseForm = cat => setExpenseForm(f => ({ ...f, [cat]: { open: true, amount: '', tag: '' } }));
-  const closeExpenseForm = cat => setExpenseForm(f => ({ ...f, [cat]: { open: false, amount: '', tag: '' } }));
-  // Handle income form open/close
-  const openIncomeForm = src => setIncomeForm(f => ({ ...f, [src]: { open: true, amount: '' } }));
-  const closeIncomeForm = src => setIncomeForm(f => ({ ...f, [src]: { open: false, amount: '' } }));
-
-  // Add expense
-  async function handleAddExpense(cat) {
-    const { amount, tag } = expenseForm[cat];
-    if (!amount) return;
-    
-    // Use local date to avoid timezone issues
-    const today = new Date();
-    const localDateStr = today.getFullYear() + '-' + 
-      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(today.getDate()).padStart(2, '0');
-      
-    const res = await fetch('http://localhost:5001/api/expenses', {
+  // Generic API call function
+  const makeApiCall = async (endpoint, data) => {
+    const response = await fetch(`http://localhost:5001/api/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, category: cat, date: localDateStr, tags: tag ? [tag] : [] })
+      body: JSON.stringify(data)
     });
-    if (res.ok) {
-      const newExp = await res.json();
-      setExpenses(e => [...e, newExp]);
-      closeExpenseForm(cat);
-    }
-  }
-
-  // Add income
-  async function handleAddIncome(src) {
-    const { amount } = incomeForm[src];
-    if (!amount) return;
-    
-    // Use local date to avoid timezone issues
-    const today = new Date();
-    const localDateStr = today.getFullYear() + '-' + 
-      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(today.getDate()).padStart(2, '0');
-      
-    const res = await fetch('http://localhost:5001/api/income', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount, source: src, date: localDateStr })
-    });
-    if (res.ok) {
-      const newInc = await res.json();
-      setIncome(i => [...i, newInc]);
-      closeIncomeForm(src);
-    }
-  }
-
-  // Add income category
-  async function handleAddIncomeCategory(name) {
-    const res = await fetch('http://localhost:5001/api/income-categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    });
-    if (res.ok) {
-      const { name: newName } = await res.json();
-      setIncomeCategories(cats => [...cats, newName]);
-    }
-  }
-
-  // Icon mapping for categories and sources
-  const categoryIcons = {
-    'Food': '🍔',
-    'Meals': '🍽️',
-    'Transport': '🚗',
-    'Transportation': '🚌',
-    'Shopping': '🛍️',
-    'Bills': '💡',
-    'Entertainment': '🎬',
-    'Other': '📦',
+    if (!response.ok) throw new Error('API call failed');
+    return response.json();
   };
-  const defaultExpenseIcon = '💸';
-  const defaultIncomeIcon = '💰';
 
-  function getCategoryIcon(cat) {
-    return categoryIcons[cat] || defaultExpenseIcon;
-  }
-  function getSourceIcon(src) {
-    // You can expand this mapping for income sources
-    if (/salary/i.test(src)) return '💼';
-    if (/freelance/i.test(src)) return '🧑‍💻';
-    if (/bonus/i.test(src)) return '🎁';
-    return defaultIncomeIcon;
-  }
+  // Transaction handlers
+  const handleAddExpense = async (category) => {
+    const form = expenseForm[category];
+    if (!form?.amount) return;
+    
+    try {
+      const newExpense = await makeApiCall('expenses', {
+        amount: form.amount,
+        category,
+        date: getLocalDateString(),
+        tags: form.tag ? [form.tag] : []
+      });
+      setExpenses(prev => [...prev, newExpense]);
+      expenseFormHandler.close(category);
+    } catch (err) {
+      console.error('Failed to add expense:', err);
+    }
+  };
+
+  const handleAddIncome = async (source) => {
+    const form = incomeForm[source];
+    if (!form?.amount) return;
+    
+    try {
+      const newIncome = await makeApiCall('income', {
+        amount: form.amount,
+        source,
+        date: getLocalDateString()
+      });
+      setIncome(prev => [...prev, newIncome]);
+      incomeFormHandler.close(source);
+    } catch (err) {
+      console.error('Failed to add income:', err);
+    }
+  };
+
+  const handleAddIncomeCategory = async (name) => {
+    try {
+      const result = await makeApiCall('income-categories', { name });
+      setIncomeCategories(prev => [...prev, result.name]);
+    } catch (err) {
+      console.error('Failed to add income category:', err);
+    }
+  };
+
+  if (loading) return <div className="app-layout"><main className="main-content"><p>Loading...</p></main></div>;
+  if (error) return <div className="app-layout"><main className="main-content"><p style={{color:'red'}}>{error}</p></main></div>;
 
   return (
     <div className="app-layout">
       <aside className="sidebar">
         <div className="sidebar-logo">💸 No Budget</div>
         
-        {/* Navigation */}
         <nav className="sidebar-nav">
           <NavLink to="/" end className={({ isActive }) => 'sidebar-link' + (isActive ? ' active' : '')}>
             <span>🏠</span>Home
@@ -406,21 +495,20 @@ function App() {
           </NavLink>
         </nav>
 
-        {/* Quick Stats */}
         <div className="sidebar-stats">
           <h3>💰 Financial Overview</h3>
           <div className="stat-row">
             <span className="stat-label">Total Income:</span>
-            <span className="stat-value income">HK${Object.values(incomeTotals).reduce((sum, val) => sum + val, 0).toFixed(2)}</span>
+            <span className="stat-value income">{formatCurrency(totals.totalIncome)}</span>
           </div>
           <div className="stat-row">
             <span className="stat-label">Total Expenses:</span>
-            <span className="stat-value expense">HK${Object.values(expenseTotals).reduce((sum, val) => sum + val, 0).toFixed(2)}</span>
+            <span className="stat-value expense">{formatCurrency(totals.totalExpenses)}</span>
           </div>
           <div className="stat-row">
             <span className="stat-label">Balance:</span>
-            <span className={`stat-value ${Object.values(incomeTotals).reduce((sum, val) => sum + val, 0) - Object.values(expenseTotals).reduce((sum, val) => sum + val, 0) >= 0 ? 'income' : 'expense'}`}>
-              HK${(Object.values(incomeTotals).reduce((sum, val) => sum + val, 0) - Object.values(expenseTotals).reduce((sum, val) => sum + val, 0)).toFixed(2)}
+            <span className={`stat-value ${totals.balance >= 0 ? 'income' : 'expense'}`}>
+              {formatCurrency(totals.balance)}
             </span>
           </div>
           <div className="stat-row">
@@ -432,95 +520,37 @@ function App() {
             <span className="stat-value">{expenses.length + income.length}</span>
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div className="sidebar-quick-actions">
-          <h3>⚡ Quick Actions</h3>
-          <button className="quick-action-btn" onClick={() => {
-            // Close all existing forms first
-            setIncomeForm({});
-            
-            // Find most used expense category or default to first available
-            let mostUsedCategory = categories.length > 0 ? categories[0] : null;
-            if (categories.length > 0) {
-              mostUsedCategory = categories.reduce((max, cat) => 
-                (expenseTotals[cat] || 0) > (expenseTotals[max] || 0) ? cat : max
-              );
-            }
-            if (mostUsedCategory) {
-              // Navigate to home page first, then open the form
-              navigate('/');
-              setTimeout(() => openExpenseForm(mostUsedCategory), 100);
-            } else {
-              alert('No expense categories available. Please add some categories first.');
-            }
-          }}>
-            <span>🛒</span>Quick Expense
-          </button>
-          <button className="quick-action-btn" onClick={() => {
-            // Close all existing forms first
-            setExpenseForm({});
-            
-            // Find most used income source or default to first available
-            let mostUsedSource = incomeCategories.length > 0 ? incomeCategories[0] : null;
-            if (incomeCategories.length > 0) {
-              mostUsedSource = incomeCategories.reduce((max, src) => 
-                (incomeTotals[src] || 0) > (incomeTotals[max] || 0) ? src : max
-              );
-            }
-            if (mostUsedSource) {
-              // Navigate to home page first, then open the form
-              navigate('/');
-              setTimeout(() => openIncomeForm(mostUsedSource), 100);
-            } else {
-              alert('No income categories available. Please add some income categories first.');
-            }
-          }}>
-            <span>💵</span>Add Income
-          </button>
-          <button className="quick-action-btn" onClick={() => {
-            // Close all forms before navigating
-            setExpenseForm({});
-            setIncomeForm({});
-            navigate('/analysis');
-          }}>
-            <span>📈</span>View Trends
-          </button>
-        </div>
       </aside>
+
       <main className="main-content">
         <div style={{ marginBottom: 10, color: '#888' }}>Base Currency: <strong>HKD</strong></div>
-        {loading ? <p>Loading...</p> : error ? <p style={{color:'red'}}>{error}</p> : (
-          <Routes>
-            <Route path="/" element={
-              <HomePage
-                categories={categories}
-                expenseTotals={expenseTotals}
-                openExpenseForm={openExpenseForm}
-                expenseForm={expenseForm}
-                setExpenseForm={setExpenseForm}
-                handleAddExpense={handleAddExpense}
-                closeExpenseForm={closeExpenseForm}
-                getCategoryIcon={getCategoryIcon}
-                incomeTotals={incomeTotals}
-                incomeCategories={incomeCategories}
-                openIncomeForm={openIncomeForm}
-                incomeForm={incomeForm}
-                setIncomeForm={setIncomeForm}
-                handleAddIncome={handleAddIncome}
-                closeIncomeForm={closeIncomeForm}
-                getSourceIcon={getSourceIcon}
-                handleAddIncomeCategory={handleAddIncomeCategory}
-              />
-            } />
-            <Route path="/transactions" element={
-              <TransactionsPage expenses={expenses} income={income} />
-            } />
-            <Route path="/analysis" element={
-              <AnalysisPage expenses={expenses} income={income} />
-            } />
-          </Routes>
-        )}
+        <Routes>
+          <Route path="/" element={
+            <HomePage
+              categories={categories}
+              expenseTotals={totals.expenseTotals}
+              expenseForm={expenseForm}
+              incomeCategories={incomeCategories}
+              incomeTotals={totals.incomeTotals}
+              incomeForm={incomeForm}
+              onExpenseFormChange={expenseFormHandler.change}
+              onIncomeFormChange={incomeFormHandler.change}
+              onOpenExpenseForm={expenseFormHandler.open}
+              onCloseExpenseForm={expenseFormHandler.close}
+              onOpenIncomeForm={incomeFormHandler.open}
+              onCloseIncomeForm={incomeFormHandler.close}
+              onAddExpense={handleAddExpense}
+              onAddIncome={handleAddIncome}
+              onAddIncomeCategory={handleAddIncomeCategory}
+            />
+          } />
+          <Route path="/transactions" element={
+            <TransactionsPage expenses={expenses} income={income} />
+          } />
+          <Route path="/analysis" element={
+            <AnalysisPage expenses={expenses} income={income} />
+          } />
+        </Routes>
       </main>
     </div>
   );
