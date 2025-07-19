@@ -1,0 +1,40 @@
+[
+  {
+    "id": "1752910094766",
+    "amount": "100",
+    "category": "Food",
+    "date": "2025-07-19",
+    "description": "",
+    "tags": []
+  },
+  {
+    "id": "1752927974219",
+    "amount": "100",
+    "category": "Transport",
+    "date": "2025-07-19",
+    "description": "",
+    "tags": [
+      "Uber"
+    ]
+  },
+  {
+    "id": "1752927985627",
+    "amount": "45",
+    "category": "Food",
+    "date": "2025-07-19",
+    "description": "",
+    "tags": [
+      "Coffee"
+    ]
+  },
+  {
+    "id": "1752927996753",
+    "amount": "78",
+    "category": "Entertainment",
+    "date": "2025-07-19",
+    "description": "",
+    "tags": [
+      "Netflix"
+    ]
+  }
+]
