@@ -436,27 +436,41 @@ function App() {
         <div className="sidebar-quick-actions">
           <h3>⚡ Quick Actions</h3>
           <button className="quick-action-btn" onClick={() => {
-            // Find most used expense category and open its form
-            const mostUsedCategory = categories.reduce((max, cat) => 
-              (expenseTotals[cat] || 0) > (expenseTotals[max] || 0) ? cat : max, 
-              categories[0] || 'Food'
-            );
-            if (mostUsedCategory) openExpenseForm(mostUsedCategory);
+            // Find most used expense category or default to first available
+            let mostUsedCategory = categories.length > 0 ? categories[0] : null;
+            if (categories.length > 0) {
+              mostUsedCategory = categories.reduce((max, cat) => 
+                (expenseTotals[cat] || 0) > (expenseTotals[max] || 0) ? cat : max
+              );
+            }
+            if (mostUsedCategory) {
+              openExpenseForm(mostUsedCategory);
+            } else {
+              alert('No expense categories available. Please add some categories first.');
+            }
           }}>
             <span>🛒</span>Quick Expense
           </button>
           <button className="quick-action-btn" onClick={() => {
-            // Find most used income source and open its form
-            const mostUsedSource = incomeCategories.reduce((max, src) => 
-              (incomeTotals[src] || 0) > (incomeTotals[max] || 0) ? src : max, 
-              incomeCategories[0] || (incomeCategories.length > 0 ? incomeCategories[0] : null)
-            );
-            if (mostUsedSource) openIncomeForm(mostUsedSource);
+            // Find most used income source or default to first available
+            let mostUsedSource = incomeCategories.length > 0 ? incomeCategories[0] : null;
+            if (incomeCategories.length > 0) {
+              mostUsedSource = incomeCategories.reduce((max, src) => 
+                (incomeTotals[src] || 0) > (incomeTotals[max] || 0) ? src : max
+              );
+            }
+            if (mostUsedSource) {
+              openIncomeForm(mostUsedSource);
+            } else {
+              alert('No income categories available. Please add some income categories first.');
+            }
           }}>
             <span>💵</span>Add Income
           </button>
           <button className="quick-action-btn" onClick={() => {
-            window.location.href = '/analysis';
+            // Navigate using React Router (need to use navigate hook in a real app)
+            // For now, let's scroll to analysis or show an alert
+            alert('Please use the "Analysis" tab in the sidebar to view trends and charts.');
           }}>
             <span>📈</span>View Trends
           </button>
