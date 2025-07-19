@@ -437,6 +437,9 @@ function App() {
         <div className="sidebar-quick-actions">
           <h3>⚡ Quick Actions</h3>
           <button className="quick-action-btn" onClick={() => {
+            // Close all existing forms first
+            setIncomeForm({});
+            
             // Find most used expense category or default to first available
             let mostUsedCategory = categories.length > 0 ? categories[0] : null;
             if (categories.length > 0) {
@@ -445,7 +448,9 @@ function App() {
               );
             }
             if (mostUsedCategory) {
-              openExpenseForm(mostUsedCategory);
+              // Navigate to home page first, then open the form
+              navigate('/');
+              setTimeout(() => openExpenseForm(mostUsedCategory), 100);
             } else {
               alert('No expense categories available. Please add some categories first.');
             }
@@ -453,6 +458,9 @@ function App() {
             <span>🛒</span>Quick Expense
           </button>
           <button className="quick-action-btn" onClick={() => {
+            // Close all existing forms first
+            setExpenseForm({});
+            
             // Find most used income source or default to first available
             let mostUsedSource = incomeCategories.length > 0 ? incomeCategories[0] : null;
             if (incomeCategories.length > 0) {
@@ -461,7 +469,9 @@ function App() {
               );
             }
             if (mostUsedSource) {
-              openIncomeForm(mostUsedSource);
+              // Navigate to home page first, then open the form
+              navigate('/');
+              setTimeout(() => openIncomeForm(mostUsedSource), 100);
             } else {
               alert('No income categories available. Please add some income categories first.');
             }
@@ -469,6 +479,9 @@ function App() {
             <span>💵</span>Add Income
           </button>
           <button className="quick-action-btn" onClick={() => {
+            // Close all forms before navigating
+            setExpenseForm({});
+            setIncomeForm({});
             navigate('/analysis');
           }}>
             <span>📈</span>View Trends
