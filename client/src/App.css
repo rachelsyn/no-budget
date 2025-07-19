@@ -38,7 +38,7 @@
   --shadow-medium: rgba(245, 230, 232, 0.15);
   --shadow-heavy: rgba(245, 230, 232, 0.2);
   --income-color: #90EE90;
-  --expense-color: #FFB6C1;
+  --expense-color: #b6dcfe;
   
   /* Chart-specific colors using the new palette */
   --chart-color-1: #F5E6E8;

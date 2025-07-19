@@ -38,7 +38,7 @@ const THEME_COLORS = {
   dark: {
     primary: '#967AA1',
     secondary: '#192A51',
-    expense: '#FFB6C1',
+    expense: '#b6dcfe',
     income: '#90EE90',
     background: '#192A51',
     text: '#F5E6E8',
@@ -129,7 +129,7 @@ const createStyles = (colors) => ({
       borderRadius: 8, 
       border: 'none', 
       background: colors.expense, 
-      color: colors.text, 
+      color: 'black', 
       cursor: 'pointer', 
       marginBottom: 4 
     },
@@ -139,7 +139,7 @@ const createStyles = (colors) => ({
       borderRadius: 8, 
       border: 'none', 
       background: colors.income, 
-      color: colors.text, 
+      color: 'black', 
       cursor: 'pointer', 
       marginBottom: 4 
     }
