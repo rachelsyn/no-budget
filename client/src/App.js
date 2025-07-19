@@ -1,6 +1,6 @@
 import './App.css';
 import { useEffect, useState } from 'react';
-import { NavLink, Routes, Route } from 'react-router-dom';
+import { NavLink, Routes, Route, useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { Pie, Bar } from 'react-chartjs-2';
@@ -248,6 +248,7 @@ function AnalysisPage(props) {
 }
 
 function App() {
+  const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
   const [income, setIncome] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -468,9 +469,7 @@ function App() {
             <span>💵</span>Add Income
           </button>
           <button className="quick-action-btn" onClick={() => {
-            // Navigate using React Router (need to use navigate hook in a real app)
-            // For now, let's scroll to analysis or show an alert
-            alert('Please use the "Analysis" tab in the sidebar to view trends and charts.');
+            navigate('/analysis');
           }}>
             <span>📈</span>View Trends
           </button>
