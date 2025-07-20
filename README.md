@@ -130,9 +130,25 @@ Your financial data is stored locally in JSON files:
 
 ## 🐛 Troubleshooting
 
+### Quick Fix for "Failed to fetch expenses data"
+
+**🚨 MOST COMMON ISSUE:** If you see "Failed to fetch expenses data", try this first:
+
+```bash
+# 1. Run diagnostic tool
+npm run check-setup
+
+# 2. If setup looks good, restart
+npm start
+
+# 3. Visit: http://localhost:5001
+```
+
+**📖 For detailed troubleshooting:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
 ### Common Issues & Solutions
 
-**❌ "Failed to fetch expenses data" (MOST COMMON ISSUE)**
+**❌ "Failed to fetch expenses data"**
 This happens when the frontend can't communicate with the backend server:
 
 ```bash

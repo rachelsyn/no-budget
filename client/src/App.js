@@ -18,7 +18,7 @@ import {
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 // Constants
-const API_BASE_URL = '/api'; // Use relative path for both development and production
+const API_BASE_URL = process.env.REACT_APP_API_URL || '/api'; // Allow environment override
 const CURRENCY = 'HK$';
 const THEME_STORAGE_KEY = 'isDarkMode';
 
@@ -162,19 +162,32 @@ const createStyles = (colors) => ({
   }
 });
 
-// Generic API utilities
-const apiCall = async (endpoint, options = {}) => {
+// Generic API utilities with retry mechanism
+const apiCall = async (endpoint, options = {}, retries = 2) => {
   const url = `${API_BASE_URL}/${endpoint}`;
   const config = {
     headers: { 'Content-Type': 'application/json' },
     ...options
   };
   
-  const response = await fetch(url, config);
-  if (!response.ok) {
-    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, config);
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+      }
+      return response.json();
+    } catch (error) {
+      if (attempt === retries) {
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error(`Network error: Unable to connect to server. Please check if the backend is running.`);
+        }
+        throw error;
+      }
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+    }
   }
-  return response.json();
 };
 
 const createApiOperations = (endpoint) => ({
@@ -219,7 +232,8 @@ const useEntityData = (entityType) => {
       setData(dataResult);
       setCategories(categoriesResult);
     } catch (err) {
-      setError(`Failed to fetch ${entityType} data`);
+      console.error(`Error fetching ${entityType} data:`, err);
+      setError(`Failed to fetch ${entityType} data: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -267,6 +281,7 @@ const useEntityData = (entityType) => {
     addItem,
     updateItem,
     addCategory,
+    fetchData, // Expose fetchData for retry functionality
     totals: useMemo(() => calculateTotals(data, config.keyField), [data, config.keyField])
   };
 };
@@ -833,10 +848,73 @@ function App() {
   }
   
   if (expenseData.error || incomeData.error) {
+    const errorMessage = expenseData.error || incomeData.error;
     return (
       <div className="app-layout">
         <main className="main-content">
-          <p style={{color:'red'}}>{expenseData.error || incomeData.error}</p>
+          <div style={{
+            padding: '40px',
+            textAlign: 'center',
+            color: colors.text
+          }}>
+            <h2 style={{ color: '#f44336', marginBottom: '20px' }}>⚠️ Connection Error</h2>
+            <p style={{ 
+              color: '#f44336', 
+              marginBottom: '20px',
+              fontSize: '16px',
+              lineHeight: '1.5'
+            }}>
+              {errorMessage}
+            </p>
+            <div style={{ 
+              backgroundColor: colors.secondary,
+              padding: '20px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              marginBottom: '20px'
+            }}>
+              <h3 style={{ marginBottom: '15px' }}>🔧 Troubleshooting Steps:</h3>
+              <ol style={{ textAlign: 'left', lineHeight: '1.6' }}>
+                <li>Make sure the backend server is running: <code>npm start</code></li>
+                <li>Check if the server is accessible at: <code>http://localhost:5001</code></li>
+                <li>Try refreshing the page</li>
+                <li>If using development mode, run: <code>npm run dev-start</code></li>
+              </ol>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => {
+                  expenseData.fetchData();
+                  incomeData.fetchData();
+                }} 
+                style={{
+                  backgroundColor: colors.primary,
+                  color: colors.text,
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                🔄 Retry Connection
+              </button>
+              <button 
+                onClick={() => window.location.reload()} 
+                style={{
+                  backgroundColor: colors.secondary,
+                  color: colors.text,
+                  border: `1px solid ${colors.border}`,
+                  padding: '12px 24px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                🔄 Refresh Page
+              </button>
+            </div>
+          </div>
         </main>
       </div>
     );
