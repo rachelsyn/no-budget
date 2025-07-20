@@ -18,7 +18,7 @@ import {
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 // Constants
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = process.env.NODE_ENV === 'development' ? '/api' : 'http://localhost:5001/api';
 const CURRENCY = 'HK$';
 const THEME_STORAGE_KEY = 'isDarkMode';
 

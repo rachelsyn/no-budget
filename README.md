@@ -15,6 +15,8 @@ A simple and intuitive budget tracking application to manage your expenses and i
 
 ## 🚀 Quick Start (Recommended)
 
+> **⚠️ IMPORTANT:** This app requires BOTH a backend server AND frontend to work. The "Failed to fetch expenses data" error occurs when only one part is running. Follow these steps exactly:
+
 **Prerequisites:** Node.js 18+ and npm 8+ ([Download here](https://nodejs.org/))
 
 1. **Clone this repository**:
@@ -23,7 +25,7 @@ A simple and intuitive budget tracking application to manage your expenses and i
    cd no-budget
    ```
 
-2. **One-command setup**:
+2. **One-command setup** (installs dependencies + builds React app):
    ```bash
    npm run setup
    ```
@@ -44,6 +46,8 @@ A simple and intuitive budget tracking application to manage your expenses and i
    ```
 
 🎉 **That's it! Your budget tracker is ready to use.**
+
+> **✅ Success indicators:** You should see your expense categories (Food, Transport, etc.) and any existing data. If you see "Failed to fetch expenses data", check the troubleshooting section below.
 
 ## 🛠️ Development Mode
 
@@ -128,6 +132,34 @@ Your financial data is stored locally in JSON files:
 
 ### Common Issues & Solutions
 
+**❌ "Failed to fetch expenses data" (MOST COMMON ISSUE)**
+This happens when the frontend can't communicate with the backend server:
+
+```bash
+# SOLUTION 1: Run the diagnostic tool first
+npm run check-setup
+# This will tell you exactly what's wrong
+
+# SOLUTION 2: Use the recommended setup command
+npm run setup
+npm start
+
+# SOLUTION 3: For development, start BOTH servers
+npm run dev-start
+# This starts backend (port 5001) AND frontend (port 3000)
+
+# SOLUTION 4: Manual check
+# Make sure backend is running:
+npm run dev  # Should show "Server running on port 5001"
+# Then in another terminal:
+cd client && npm start
+```
+
+**✅ How to verify it's working:**
+- Visit http://localhost:5001 (production) or http://localhost:3000 (development)
+- You should see your expense categories and data
+- If you see "Failed to fetch" errors, the backend server is not running
+
 **❌ "Error: listen EADDRINUSE: address already in use :::5001"**
 ```bash
 # Kill any processes using port 5001
@@ -148,12 +180,6 @@ npm start
 npm install
 cd client && npm install && cd ..
 npm run build
-```
-
-**❌ "Failed to fetch data" in the app**
-```bash
-# Backend server not running or API issues
-npm run validate  # Check what's wrong
 ```
 
 **❌ Development mode shows "Proxy error"**
@@ -216,6 +242,7 @@ The built React app is served by the Express server for simplified deployment. *
 - `npm run dev-start` - Start both frontend & backend in dev mode
 - `npm run build` - Build React app for production
 - `npm run validate` - Test everything works
+- `npm run check-setup` - Diagnostic tool to identify setup issues
 - `npm run install-client` - Install frontend dependencies only
 
 ## 🤝 Contributing

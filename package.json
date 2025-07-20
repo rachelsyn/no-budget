@@ -15,6 +15,7 @@
     "setup": "npm install && npm run install-client && npm run build",
     "validate": "node test-server.js",
     "dev-start": "concurrently \"npm run dev\" \"cd client && npm start\"",
+    "check-setup": "node check-setup.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
