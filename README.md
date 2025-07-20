@@ -25,29 +25,45 @@ A simple and intuitive budget tracking application to manage your expenses and i
    cd no-budget
    ```
 
-2. **One-command setup** (installs dependencies + builds React app):
+2. **🚨 ONE COMMAND TO FIX EVERYTHING** (handles setup + startup):
    ```bash
-   npm run setup
+   npm run start-app
    ```
 
-3. **Validate everything works**:
-   ```bash
-   npm run validate
-   ```
+   This automatically:
+   - ✅ Installs dependencies
+   - ✅ Builds the React app
+   - ✅ Starts the server
+   - ✅ Tests the connection
+   - ✅ Opens your browser
 
-4. **Start the application**:
-   ```bash
-   npm start
-   ```
-
-5. **Open your browser** and visit:
+3. **Open your browser** and visit:
    ```
    http://localhost:5001
    ```
 
 🎉 **That's it! Your budget tracker is ready to use.**
 
-> **✅ Success indicators:** You should see your expense categories (Food, Transport, etc.) and any existing data. If you see "Failed to fetch expenses data", check the troubleshooting section below.
+> **✅ Success indicators:** You should see your expense categories (Food, Transport, etc.) and any existing data. If you see "Failed to fetch expenses data", run `npm run start-app` again.
+
+### Alternative Manual Setup
+
+If you prefer manual control:
+
+1. **Setup everything**:
+   ```bash
+   npm run setup
+   ```
+
+2. **Validate everything works**:
+   ```bash
+   npm run validate
+   ```
+
+3. **Start the application**:
+   ```bash
+   npm start
+   ```
 
 ## 🛠️ Development Mode
 
@@ -135,16 +151,13 @@ Your financial data is stored locally in JSON files:
 **🚨 MOST COMMON ISSUE:** If you see "Failed to fetch expenses data", try this first:
 
 ```bash
-# 1. Run diagnostic tool
-npm run check-setup
-
-# 2. If setup looks good, restart
-npm start
-
-# 3. Visit: http://localhost:5001
+# 🎯 ONE COMMAND FIX
+npm run start-app
 ```
 
-**📖 For detailed troubleshooting:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+This automatically handles everything and fixes the connection issue!
+
+**📖 For detailed troubleshooting:** See [CONNECTION_FIX.md](./CONNECTION_FIX.md) or [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 
 ### Common Issues & Solutions
 
@@ -152,19 +165,23 @@ npm start
 This happens when the frontend can't communicate with the backend server:
 
 ```bash
-# SOLUTION 1: Run the diagnostic tool first
+# 🎯 SOLUTION 1: ONE COMMAND FIX (Recommended)
+npm run start-app
+# This handles everything automatically!
+
+# SOLUTION 2: Run the diagnostic tool first
 npm run check-setup
 # This will tell you exactly what's wrong
 
-# SOLUTION 2: Use the recommended setup command
+# SOLUTION 3: Use the recommended setup command
 npm run setup
 npm start
 
-# SOLUTION 3: For development, start BOTH servers
+# SOLUTION 4: For development, start BOTH servers
 npm run dev-start
 # This starts backend (port 5001) AND frontend (port 3000)
 
-# SOLUTION 4: Manual check
+# SOLUTION 5: Manual check
 # Make sure backend is running:
 npm run dev  # Should show "Server running on port 5001"
 # Then in another terminal:

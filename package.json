@@ -17,6 +17,7 @@
     "dev-start": "concurrently \"npm run dev\" \"cd client && npm start\"",
     "check-setup": "node check-setup.js",
     "test-connection": "node test-connection.js",
+    "start-app": "node start-app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
