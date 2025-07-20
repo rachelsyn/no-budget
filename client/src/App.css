@@ -16,8 +16,8 @@
   --shadow-light: rgba(15, 163, 177, 0.1);
   --shadow-medium: rgba(15, 163, 177, 0.15);
   --shadow-heavy: rgba(15, 163, 177, 0.2);
-  --income-color: #90EE90;
-  --expense-color: #FFB6C1;
+  --income-color: #F7A072;
+  --expense-color: #FFFFFF;
 }
 
 .dark-theme {
